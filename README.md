@@ -1,4 +1,4 @@
-﻿# C Lab Quiz Evaluator
+# C Lab Quiz Evaluator
 
 Triage tool for C programming lab quizzes at **IISER Bhopal (Data Science & Engineering)**.
 It compiles and runs every student submission against the question paper's tests inside a resource-limited
@@ -8,7 +8,7 @@ optional LLM judge *approach* (standard vs creative). A TA then reviews a short,
 | Tab | Meaning |
 |---|---|
 | **Needs review** (red) | Does not compile, times out, fails tests, hard-codes output, special-cases sample inputs, uses a forbidden construct, is empty, addresses the grader, or is a *strong* clone of another submission |
-| **Creative approach** (blue) | Passes every test and uses a distinctive technique (bit tricks, closed forms, â€¦) worth a five-second look |
+| **Creative approach** (blue) | Passes every test and uses a distinctive technique (bit tricks, closed forms, …) worth a five-second look |
 | **Clear** (green) | Passes every test, no integrity indicators |
 | **Unverified** (gray) | No tests ran (none configured, or the sandbox is unavailable). The tool gives no verdict instead of guessing |
 
@@ -16,14 +16,14 @@ optional LLM judge *approach* (standard vs creative). A TA then reviews a short,
 
 Hard facts always outrank heuristics, and the LLM can never overturn them.
 
-1. Security violations (shell, network, file, environment, bad `#include`) â†’ never executed
+1. Security violations (shell, network, file, environment, bad `#include`) → never executed
 2. Text addressed to an automated grader in comments or strings
 3. Empty / skeleton `main()`
 4. Compile error, then timeout
 5. A construct the question forbids (`forbidden_constructs`)
-6. No tests â†’ **Unverified**
-7. All tests pass â†’ strong clone â†’ red; distinctive technique â†’ blue; otherwise green
-8. Some tests fail â†’ classified by *behaviour*: same output for every input = hard-coded; sample answers only = special-casing; loops that never reach the output = decoy code; otherwise a plain failing program
+6. No tests → **Unverified**
+7. All tests pass → strong clone → red; distinctive technique → blue; otherwise green
+8. Some tests fail → classified by *behaviour*: same output for every input = hard-coded; sample answers only = special-casing; loops that never reach the output = decoy code; otherwise a plain failing program
 
 **Plagiarism.** Programs are canonicalised (identifiers, literals, `for`/`while`, comments, whitespace ignored) and compared.
 Two students who both write the textbook loop produce identical token streams, so similarity alone is weak evidence.
@@ -32,16 +32,16 @@ comments) or the same pair is a near-exact copy in several questions. Matches in
 shown as weak context and never create a verdict. Matches are evidence for a human, not proof.
 
 **LLM (optional).** Claude Haiku (default `claude-haiku-5-5`) receives code that already passes all tests and no integrity flag.
-It may only move green â†” blue, add a one-line summary, line hints and an advisory "concern" note. It cannot touch a red or gray
+It may only move green ↔ blue, add a one-line summary, line hints and an advisory "concern" note. It cannot touch a red or gray
 verdict. Student code is wrapped in per-request random delimiters; failures are reported in the UI, never swallowed.
 
 ## Deploy on Render (from GitHub)
 
 1. Push this folder to a GitHub repository (the repo root must contain `Dockerfile` and `render.yaml`).
-2. Render dashboard â†’ **New â†’ Blueprint** â†’ select the repo. Render reads `render.yaml` and creates the web service
+2. Render dashboard → **New → Blueprint** → select the repo. Render reads `render.yaml` and creates the web service
    (Docker, Singapore, Starter plan, 1 GB persistent disk at `/app/data`).
 3. When prompted, set **`ANTHROPIC_API_KEY`** (optional; without it the tool runs fully deterministically).
-4. Open the service â†’ **Environment** â†’ copy the generated **`API_AUTH_TOKEN`**. Share it with TAs; the web UI asks for it once per browser session.
+4. Open the service → **Environment** → copy the generated **`API_AUTH_TOKEN`**. Share it with TAs; the web UI asks for it once per browser session.
 5. Open the service URL. The header shows *Sandbox ready* and the AI-review status.
 
 Notes
@@ -53,7 +53,7 @@ Notes
 ## Using it
 
 1. **Question paper**: a JSON file (see `sample_quiz_data/`). Mark the tests printed on the paper with `"is_sample": true`; the rest are hidden tests.
-2. **Submissions**: one ZIP per student (`26416.zip` containing `que1.c`â€¦), a master ZIP with a folder per student, or loose files like `26416_que1.c`. Suffixes such as `_que_paper1` are removed from student ids.
+2. **Submissions**: one ZIP per student (`26416.zip` containing `que1.c`…), a master ZIP with a folder per student, or loose files like `26416_que1.c`. Suffixes such as `_que_paper1` are removed from student ids.
 3. **Evaluate**. A progress bar follows the server-side job. Results: *Triage* (list + code, tests, evidence), *Class matrix*, *Integrity* (collusion pairs, side-by-side compare), *TA memory*.
 4. **Export** a detailed CSV or the matrix CSV, **save the session** as JSON to reopen later, or tick *Hide student ids* for blind marking.
 
@@ -65,9 +65,9 @@ All settings are environment variables (see `.env.example`). The important ones:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | â€“ | Enables AI review |
+| `ANTHROPIC_API_KEY` | – | Enables AI review |
 | `ANTHROPIC_MODEL` / `FALLBACK_MODEL` | `claude-haiku-5-5` / `claude-haiku-4-5-20251001` | Model chain |
-| `REQUIRE_AUTH` / `API_AUTH_TOKEN` | `false` / â€“ | Access control (`render.yaml` turns it on and generates a token) |
+| `REQUIRE_AUTH` / `API_AUTH_TOKEN` | `false` / – | Access control (`render.yaml` turns it on and generates a token) |
 | `GCC_TIMEOUT_SECONDS` | `3.0` | Wall clock per test case |
 | `RLIMIT_AS_BYTES` | 128 MB | Address space per student program |
 | `SANDBOX_TEST_WORKERS` | `4` | Test cases of one submission run side by side (set `1` on a very small instance) |
