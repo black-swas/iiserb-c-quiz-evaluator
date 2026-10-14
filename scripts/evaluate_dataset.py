@@ -62,9 +62,15 @@ def main() -> int:
     from app.schemas import QuizPaper
 
     paper_json = json.loads((ROOT / "sample_quiz_data" / f"quiz{args.paper}_paper.json").read_text(encoding="utf-8"))
-    uploads = [(p.name, p.read_bytes()) for p in sorted(Path(args.zips).glob(f"student*_que_paper{args.paper}.zip"))]
+    zip_dir = Path(args.zips)
+    zips = sorted(zip_dir.glob(f"student*_que_paper{args.paper}.zip"))
+    if not zips:
+        zips = sorted((zip_dir / f"que{args.paper}_solutions").glob(f"student*_que_paper{args.paper}.zip"))
+    if not zips:
+        zips = sorted(zip_dir.rglob(f"student*_que_paper{args.paper}.zip"))
+    uploads = [(p.name, p.read_bytes()) for p in zips]
     if not uploads:
-        print("no student zips found"); return 2
+        print(f"no student zips found in {args.zips}"); return 2
     extracted = extract_student_submissions(uploads)
     report = asyncio.run(run_full_quiz_evaluation(QuizPaper(**paper_json), extracted))
 

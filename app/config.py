@@ -52,6 +52,7 @@ class Settings:
     rlimit_nproc: int = _env_int("RLIMIT_NPROC", 1)
     max_output_bytes: int = _env_int("MAX_OUTPUT_BYTES", 65536)
     sandbox_parallelism: int = _env_int("SANDBOX_PARALLELISM", 2)
+    sandbox_test_workers: int = _env_int("SANDBOX_TEST_WORKERS", 4)       # test cases run at once per submission
 
     # ---- plagiarism
     clone_threshold_percent: float = _env_float("CLONE_THRESHOLD_PERCENT", 88.0)
@@ -65,7 +66,7 @@ class Settings:
     max_uncompressed_bytes: int = _env_int("MAX_UNCOMPRESSED_BYTES", 50 * 1024 * 1024)
     max_single_file_bytes: int = _env_int("MAX_SINGLE_FILE_BYTES", 2 * 1024 * 1024)
     max_file_count: int = _env_int("MAX_FILE_COUNT", 1000)
-    max_nesting_depth: int = _env_int("MAX_NESTING_DEPTH", 2)
+    max_nesting_depth: int = _env_int("MAX_NESTING_DEPTH", 3)
     max_students_per_session: int = _env_int("MAX_STUDENTS_PER_SESSION", 60)
     max_questions_per_paper: int = _env_int("MAX_QUESTIONS_PER_PAPER", 10)
 

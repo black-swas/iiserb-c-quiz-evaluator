@@ -88,3 +88,112 @@ def test_binaries_are_ignored_but_listed():
 def test_corrupt_zip_is_reported():
     result = extract_student_submissions([("broken.zip", b"definitely not a zip")])
     assert result["total_c_files"] == 0 and any("Corrupted" in w for w in result["warnings"])
+
+
+# ------------------------------------------------------------------ naming scenarios
+import pytest
+
+
+@pytest.mark.parametrize("path,ctx,expected", [
+    ("26416_que1.c", "", ("26416", "Q1")),
+    ("26416_Que1.C", "", ("26416", "Q1")),
+    ("26416_que01.c", "", ("26416", "Q1")),
+    ("26416-que1.c", "", ("26416", "Q1")),
+    ("26416 que 1.c", "", ("26416", "Q1")),
+    ("26416_question_2.c", "", ("26416", "Q2")),
+    ("26416_Q3.c", "", ("26416", "Q3")),
+    ("26416_answer1.c", "", ("26416", "Q1")),
+    ("26416_1.c", "", ("26416", "Q1")),
+    ("que1_26416.c", "", ("26416", "Q1")),
+    ("Q2 - 26416.c", "", ("26416", "Q2")),
+    ("que1.c", "26416.zip", ("26416", "Q1")),
+    ("Que 1.c", "26416.zip", ("26416", "Q1")),
+    ("que-1.c", "26416.zip", ("26416", "Q1")),
+    ("que_1.c", "26416.zip", ("26416", "Q1")),
+    ("answer1.c", "26416.zip", ("26416", "Q1")),
+    ("solution2.c", "26416.zip", ("26416", "Q2")),
+    ("prog3.c", "26416.zip", ("26416", "Q3")),
+    ("1.c", "26416.zip", ("26416", "Q1")),
+    ("que1_solution.c", "26416.zip", ("26416", "Q1")),
+    # duplicate / download / editor decorations
+    ("26416_que1 (1).c", "", ("26416", "Q1")),
+    ("26416_que1(2).c", "", ("26416", "Q1")),
+    ("26416_que1 - Copy.c", "", ("26416", "Q1")),
+    ("Copy of 26416_que1.c", "", ("26416", "Q1")),
+    ("26416_que1_final.c", "", ("26416", "Q1")),
+    ("26416_que1_v2.c", "", ("26416", "Q1")),
+    ("26416_que1_final_final (1).c", "", ("26416", "Q1")),
+    ("que1 (1).c", "26416.zip", ("26416", "Q1")),
+    ("que1.c", "26416 (1).zip", ("26416", "Q1")),
+    ("que1.c", "26416_que_paper1.zip", ("26416", "Q1")),
+    # folders
+    ("26416/que1.c", "", ("26416", "Q1")),
+    ("26416 - Rishit Sharma/que1.c", "", ("26416 - Rishit Sharma", "Q1")),
+    ("Rishit Sharma_123456_assignsubmission_file_/que2.c", "", ("Rishit Sharma_123456", "Q2")),
+    ("Quiz 1/26416/que1.c", "", ("26416", "Q1")),
+    ("submissions/batch2025/26416/que1.c", "", ("26416", "Q1")),
+    ("26416/Q1/main.c", "", ("26416", "Q1")),
+    ("26416/question 2/solution.c", "", ("26416", "Q2")),
+    ("26416_que3/main.c", "", ("26416", "Q3")),
+    ("26416\\que1.c", "", ("26416", "Q1")),
+    ("राहुल_que1.c", "", ("राहुल", "Q1")),
+    # not placeable
+    ("main.c", "26416.zip", (None, None)),
+    ("hello.c", "", (None, None)),
+])
+def test_naming_scenarios(path, ctx, expected):
+    assert parse_roll_and_question(path, ctx) == expected
+
+
+def test_same_student_with_different_letter_case_is_one_student():
+    result = extract_student_submissions([("s.zip", make_zip({"S26416_que1.c": C, "s26416_que2.c": C}))])
+    assert students(result) == {"S26416": ["Q1", "Q2"]}
+
+
+def test_real_file_beats_empty_and_exact_name_beats_copy():
+    z = make_zip({"26416_que1.c": "", "26416_que1 (1).c": C, "26416_que2.c": C + "// original\n", "26416_que2 - Copy.c": C + "// copy\n"})
+    result = extract_student_submissions([("s.zip", z)])
+    assert "(1)" in result["students"]["26416"]["Q1"]["filename"]
+    assert result["students"]["26416"]["Q2"]["filename"] == "26416_que2.c"
+    assert result["total_c_files"] == 2 and sum("Duplicate" in w for w in result["warnings"]) == 2
+
+
+def test_conflicting_file_and_folder_identity_is_reported():
+    result = extract_student_submissions([("s.zip", make_zip({"27111/26416_que1.c": C}))])
+    assert students(result) == {"26416": ["Q1"]}
+    assert any("27111" in w and "26416" in w for w in result["warnings"])
+
+
+def test_utf16_bom_crlf_and_cp1252_sources_are_decoded():
+    utf16 = ("#include <stdio.h>\r\nint main(){return 0;}\r\n").encode("utf-16")
+    cp = "#include <stdio.h>\n// caf\xe9\nint main(){return 0;}\n".encode("cp1252")
+    bom = b"\xef\xbb\xbf" + C.encode()
+    result = extract_student_submissions([("a_que1.c", utf16), ("b_que1.c", cp), ("c_que1.c", bom)])
+    s = result["students"]
+    assert s["a"]["Q1"]["code"].startswith("#include") and "\r" not in s["a"]["Q1"]["code"] and "\x00" not in s["a"]["Q1"]["code"]
+    assert "caf\xe9" in s["b"]["Q1"]["code"]
+    assert s["c"]["Q1"]["code"].startswith("#include")
+
+
+def test_non_c_and_unsupported_files_are_reported_not_crashing():
+    z = make_zip({"26416/que1.c": C, "26416/notes.txt": "x", "26416/que2.cpp": "x", "26416/que3.c.txt": C, "26416/more.rar": "x"})
+    result = extract_student_submissions([("s.zip", z), ("all.7z", b"x"), ("readme.docx", b"x")])
+    joined = " ".join(result["warnings"])
+    assert students(result) == {"26416": ["Q1"]}
+    assert "que3.c.txt" in joined and ".rar" in joined and "all.7z" in joined and ".cpp" in joined
+
+
+def test_password_protected_or_damaged_entries_do_not_crash():
+    good = make_zip({"26416_que1.c": C})
+    damaged = bytearray(make_zip({"26417_que1.c": C * 40}, compress=zipfile.ZIP_STORED))
+    damaged[60:70] = b"\xff" * 10
+    result = extract_student_submissions([("a.zip", good), ("b.zip", bytes(damaged))])
+    assert "26416" in result["students"]
+
+
+def test_zip_inside_zip_inside_zip_is_supported():
+    inner = make_zip({"que1.c": C})
+    mid = make_zip({"26416.zip": inner})
+    outer = make_zip({"all/mid.zip": mid})
+    result = extract_student_submissions([("everything.zip", outer)])
+    assert students(result) == {"26416": ["Q1"]}
