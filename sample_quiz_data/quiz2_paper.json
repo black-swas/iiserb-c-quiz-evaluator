@@ -1,0 +1,56 @@
+{
+  "course_code": "DSE-101",
+  "quiz_title": "Quiz 2: Arrays, Extrema, In-Place Reversal & Frequency",
+  "questions": [
+    {
+      "question_id": "Q1",
+      "title": "Second Largest Element in Array",
+      "problem_statement": "Given an array of N integers, find the strictly second largest distinct element.\nIf no strictly second largest element exists (e.g. all elements are identical, or N < 2), print `-1`.\n\n### Input Format\nFirst line: Integer `N` (1 <= N <= 1000).\nSecond line: `N` space-separated integers.\n\n### Output Format\nPrint the second largest distinct integer or `-1` followed by a newline.",
+      "topic_tags": ["arrays", "searching", "extrema"],
+      "expected_complexity": "O(N)",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "5\n12 35 1 10 34\n", "expected_output": "34", "is_sample": true},
+        {"input_data": "4\n10 10 10 10\n", "expected_output": "-1", "is_sample": true},
+        {"input_data": "6\n5 1 2 4 5 3\n", "expected_output": "4", "is_sample": false},
+        {"input_data": "3\n-5 -2 -10\n", "expected_output": "-5", "is_sample": false},
+        {"input_data": "2\n100 200\n", "expected_output": "100", "is_sample": false},
+        {"input_data": "1\n42\n", "expected_output": "-1", "is_sample": false},
+        {"input_data": "7\n9 8 7 6 5 4 3\n", "expected_output": "8", "is_sample": false}
+      ]
+    },
+    {
+      "question_id": "Q2",
+      "title": "In-Place Array Reversal",
+      "problem_statement": "Given an array of N integers, reverse the elements in-place and print the reversed array.\n\n### Input Format\nFirst line: Integer `N` (1 <= N <= 1000).\nSecond line: `N` space-separated integers.\n\n### Output Format\nPrint the reversed array with elements separated by single spaces, followed by a newline.",
+      "topic_tags": ["arrays", "pointers", "reversal"],
+      "expected_complexity": "O(N)",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "5\n1 2 3 4 5\n", "expected_output": "5 4 3 2 1", "is_sample": true},
+        {"input_data": "1\n42\n", "expected_output": "42", "is_sample": true},
+        {"input_data": "6\n10 20 30 40 50 60\n", "expected_output": "60 50 40 30 20 10", "is_sample": false},
+        {"input_data": "4\n-1 -2 -3 -4\n", "expected_output": "-4 -3 -2 -1", "is_sample": false},
+        {"input_data": "8\n1 0 1 0 1 0 1 0\n", "expected_output": "0 1 0 1 0 1 0 1", "is_sample": false},
+        {"input_data": "2\n7 9\n", "expected_output": "9 7", "is_sample": false}
+      ]
+    },
+    {
+      "question_id": "Q3",
+      "title": "Majority Element in Array",
+      "problem_statement": "Given an array of N integers, find the element that appears strictly more than floor(N / 2) times.\nIf no such majority element exists, print `-1`.\n\n### Input Format\nFirst line: Integer `N` (1 <= N <= 1000).\nSecond line: `N` space-separated integers.\n\n### Output Format\nPrint the majority element or `-1` followed by a newline.",
+      "topic_tags": ["arrays", "frequency", "boyer-moore"],
+      "expected_complexity": "O(N)",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "5\n3 3 4 2 4\n", "expected_output": "-1", "is_sample": true},
+        {"input_data": "7\n2 2 1 1 2 2 2\n", "expected_output": "2", "is_sample": true},
+        {"input_data": "9\n1 1 1 1 2 3 4 1 1\n", "expected_output": "1", "is_sample": false},
+        {"input_data": "6\n5 5 5 2 2 2\n", "expected_output": "-1", "is_sample": false},
+        {"input_data": "1\n99\n", "expected_output": "99", "is_sample": false},
+        {"input_data": "8\n4 4 4 4 1 2 3 4\n", "expected_output": "4", "is_sample": false},
+        {"input_data": "4\n7 7 8 8\n", "expected_output": "-1", "is_sample": false}
+      ]
+    }
+  ]
+}

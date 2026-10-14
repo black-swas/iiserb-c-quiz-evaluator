@@ -1,0 +1,37 @@
+# Render Blueprint: connect this GitHub repo in Render (New > Blueprint) and it is deployed from here.
+services:
+  - type: web
+    name: iiserb-c-quiz-evaluator
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter                  # persistent disks need a paid plan
+    region: singapore
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: evaluator-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      # Secret: you paste this in the Render dashboard (never commit it).
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: FALLBACK_MODEL
+        value: claude-haiku-4-5-20251001
+      - key: LLM_ENABLED
+        value: "true"
+      # Access control: Render generates a random token; read it under Environment, share it with TAs.
+      - key: REQUIRE_AUTH
+        value: "true"
+      - key: API_AUTH_TOKEN
+        generateValue: true
+      - key: SQLITE_DB_PATH
+        value: /app/data/hitl_calibration.db
+      - key: CLONE_THRESHOLD_PERCENT
+        value: "88"
+      - key: MAX_UPLOAD_BYTES
+        value: "26214400"
+      - key: MAX_UNCOMPRESSED_BYTES
+        value: "52428800"
