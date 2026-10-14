@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Lab Quiz Evaluator · IISER Bhopal DSE</title>
+  <meta name="description" content="Triage C programming lab submissions: tests, integrity checks and approach review.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">C</span>
+      <div>
+        <h1>C Lab Quiz Evaluator</h1>
+        <p>IISER Bhopal · Data Science &amp; Engineering</p>
+      </div>
+    </div>
+    <div class="topbar-status" id="statusPills" aria-live="polite"></div>
+    <div class="topbar-actions" id="headerActions"></div>
+  </header>
+
+  <main id="main">
+    <!-- ================= SETUP ================= -->
+    <section id="viewSetup" class="view">
+      <div class="page-head">
+        <h2>New evaluation</h2>
+        <p>Upload a question paper and the students' C files. Every submission is compiled and run against the tests in an isolated sandbox, then checked for integrity issues.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><span class="step">1</span><h3>Question paper</h3></div>
+          <p class="muted">A JSON file with the questions and their test cases. Mark the tests printed on the paper with <code>"is_sample": true</code>.</p>
+          <div class="field-row">
+            <label class="btn" for="paperInput">Choose JSON file</label>
+            <input id="paperInput" type="file" accept=".json,application/json" class="visually-hidden">
+            <span class="muted">or</span>
+            <select id="sampleSelect" aria-label="Load a sample question paper">
+              <option value="">Load a sample paper…</option>
+            </select>
+          </div>
+          <div id="paperSummary" class="summary-box" hidden></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="step">2</span><h3>Student submissions</h3></div>
+          <p class="muted">One ZIP per student, one master ZIP, or loose <code>.c</code> files.</p>
+          <div id="dropZone" class="dropzone" tabindex="0" role="button" aria-label="Choose or drop student files">
+            <strong>Drop files here</strong>
+            <span class="muted">or click to browse (.zip, .c)</span>
+          </div>
+          <input id="filesInput" type="file" accept=".zip,.c" multiple class="visually-hidden">
+          <div id="filesSummary" class="summary-box" hidden></div>
+          <details class="naming-help">
+            <summary>How should files be named?</summary>
+            <ul>
+              <li><code>26416.zip</code> containing <code>que1.c</code>, <code>que2.c</code>… (student id = zip name)</li>
+              <li><code>26416_que1.c</code> or <code>26416_q1.c</code> as loose files</li>
+              <li>A master ZIP with one folder per student: <code>26416/que1.c</code></li>
+              <li>Suffixes like <code>_que_paper1</code> are dropped from the student id.</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+
+      <div id="setupError" class="alert alert-error" role="alert" hidden></div>
+
+      <div class="actions-row">
+        <button id="runBtn" class="btn btn-primary btn-lg" type="button" disabled>Evaluate submissions</button>
+        <span class="muted" id="runHint">Add a question paper and at least one file to continue.</span>
+        <span class="spacer"></span>
+        <label class="btn btn-ghost" for="sessionInput">Open saved session</label>
+        <input id="sessionInput" type="file" accept=".json,application/json" class="visually-hidden">
+      </div>
+    </section>
+
+    <!-- ================= PROGRESS ================= -->
+    <section id="viewProgress" class="view" hidden>
+      <div class="card progress-card">
+        <h2 id="progressStage">Starting…</h2>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-meta"><span id="progressMsg" class="muted"></span><strong id="progressPct">0%</strong></div>
+        <p class="muted small">The evaluation runs on the server; you can keep this page open. Large classes can take a few minutes.</p>
+      </div>
+    </section>
+
+    <!-- ================= RESULTS ================= -->
+    <section id="viewResults" class="view" hidden>
+      <div class="results-head">
+        <div>
+          <h2 id="resultsTitle"></h2>
+          <p class="muted" id="resultsSub"></p>
+        </div>
+      </div>
+      <div id="summaryStrip" class="summary-strip"></div>
+      <div id="engineNote" class="alert" hidden></div>
+      <details id="warningsBox" class="warnings" hidden>
+        <summary id="warningsSummary"></summary>
+        <ul id="warningsList"></ul>
+      </details>
+      <nav id="tabs" class="tabs" role="tablist" aria-label="Result views"></nav>
+      <div id="tabPanel" class="tab-panel" role="tabpanel"></div>
+    </section>
+  </main>
+
+  <dialog id="tokenDialog">
+    <form method="dialog" id="tokenForm">
+      <h3>Access token required</h3>
+      <p class="muted">This server is protected. Enter the access token set in its environment (<code>API_AUTH_TOKEN</code>).</p>
+      <input id="tokenInput" type="password" autocomplete="off" placeholder="Access token" aria-label="Access token">
+      <div class="dialog-actions">
+        <button class="btn btn-ghost" value="cancel" type="submit">Cancel</button>
+        <button class="btn btn-primary" id="tokenSave" value="save" type="submit">Continue</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="compareDialog" class="dialog-wide">
+    <div class="dialog-head">
+      <h3 id="compareTitle">Compare submissions</h3>
+      <button class="btn btn-ghost" id="compareClose" type="button">Close</button>
+    </div>
+    <div id="compareBody" class="compare-body"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "course_code": "DSE-101",
+  "quiz_title": "Quiz 1: Number Theory, Sequences & Bitwise Logic",
+  "questions": [
+    {
+      "question_id": "Q1",
+      "title": "Count Set Bits (Hamming Weight)",
+      "problem_statement": "Write a C program to count the number of set bits (1s) in the binary representation of a given non-negative integer N.\n\n### Input Format\nA single non-negative integer `N` (0 <= N <= 2,000,000,000).\n\n### Output Format\nPrint the count of set bits followed by a newline.",
+      "topic_tags": ["bitwise", "loops", "number-theory"],
+      "expected_complexity": "O(log N)",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "0\n", "expected_output": "0", "is_sample": true},
+        {"input_data": "7\n", "expected_output": "3", "is_sample": true},
+        {"input_data": "16\n", "expected_output": "1", "is_sample": true},
+        {"input_data": "1023\n", "expected_output": "10", "is_sample": false},
+        {"input_data": "1048576\n", "expected_output": "1", "is_sample": false},
+        {"input_data": "123456789\n", "expected_output": "16", "is_sample": false},
+        {"input_data": "2147483647\n", "expected_output": "31", "is_sample": false}
+      ]
+    },
+    {
+      "question_id": "Q2",
+      "title": "Collatz Conjecture Steps",
+      "problem_statement": "Given a positive integer N, compute the total number of steps to reach 1 using the Collatz rules:\n- If N is even: N = N / 2\n- If N is odd: N = 3 * N + 1\nIf N is already 1, the number of steps is 0.\n\n### Input Format\nA single positive integer `N` (1 <= N <= 100,000).\n\n### Output Format\nPrint the total number of transformation steps followed by a newline.",
+      "topic_tags": ["loops", "recursion", "sequences"],
+      "expected_complexity": "O(steps)",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "1\n", "expected_output": "0", "is_sample": true},
+        {"input_data": "6\n", "expected_output": "8", "is_sample": true},
+        {"input_data": "11\n", "expected_output": "14", "is_sample": true},
+        {"input_data": "27\n", "expected_output": "111", "is_sample": false},
+        {"input_data": "100\n", "expected_output": "25", "is_sample": false},
+        {"input_data": "1000\n", "expected_output": "111", "is_sample": false},
+        {"input_data": "9999\n", "expected_output": "91", "is_sample": false}
+      ]
+    },
+    {
+      "question_id": "Q3",
+      "title": "Sum of Multiples of 3 or 5 below N",
+      "problem_statement": "Find the sum of all natural numbers strictly less than N that are multiples of 3 or 5.\nIf N <= 3, the sum is 0. Note that the sum can exceed standard 32-bit signed integer limits; use 64-bit integer (`long long`) for the accumulator.\n\n### Input Format\nA single integer `N` (1 <= N <= 1,000,000).\n\n### Output Format\nPrint the sum followed by a newline.",
+      "topic_tags": ["loops", "series", "math"],
+      "expected_complexity": "O(N) or O(1)",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "10\n", "expected_output": "23", "is_sample": true},
+        {"input_data": "16\n", "expected_output": "60", "is_sample": true},
+        {"input_data": "2\n", "expected_output": "0", "is_sample": false},
+        {"input_data": "100\n", "expected_output": "2318", "is_sample": false},
+        {"input_data": "1000\n", "expected_output": "233168", "is_sample": false},
+        {"input_data": "50000\n", "expected_output": "583291668", "is_sample": false},
+        {"input_data": "1000000\n", "expected_output": "233333166668", "is_sample": false}
+      ]
+    }
+  ]
+}

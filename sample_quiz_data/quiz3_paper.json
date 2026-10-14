@@ -1,0 +1,56 @@
+{
+  "course_code": "DSE-101",
+  "quiz_title": "Quiz 3: Number Theory, String Palindromes & 2D Matrices",
+  "questions": [
+    {
+      "question_id": "Q1",
+      "title": "Greatest Common Divisor (GCD)",
+      "problem_statement": "Given two non-negative integers A and B, compute their Greatest Common Divisor (GCD).\nIf both numbers are 0, output 0.\n\n### Input Format\nTwo non-negative space-separated integers `A` and `B` (0 <= A, B <= 1,000,000,000).\n\n### Output Format\nPrint gcd(A, B) followed by a newline.",
+      "topic_tags": ["number-theory", "recursion", "loops"],
+      "expected_complexity": "O(log(min(A, B)))",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "12 18\n", "expected_output": "6", "is_sample": true},
+        {"input_data": "0 25\n", "expected_output": "25", "is_sample": true},
+        {"input_data": "101 103\n", "expected_output": "1", "is_sample": false},
+        {"input_data": "270 192\n", "expected_output": "6", "is_sample": false},
+        {"input_data": "1000000 500000\n", "expected_output": "500000", "is_sample": false},
+        {"input_data": "48 180\n", "expected_output": "12", "is_sample": false},
+        {"input_data": "0 0\n", "expected_output": "0", "is_sample": false}
+      ]
+    },
+    {
+      "question_id": "Q2",
+      "title": "Palindrome String Verification",
+      "problem_statement": "Given a single alphanumeric string S (length up to 100, no whitespace), check if it is a palindrome ignoring case (e.g. 'A' == 'a'). Output `YES` if palindrome, `NO` otherwise.\n\n### Input Format\nA single string `S` on one line without spaces.\n\n### Output Format\nPrint `YES` or `NO` followed by a newline.",
+      "topic_tags": ["strings", "pointers", "case-insensitive"],
+      "expected_complexity": "O(L)",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "Racecar\n", "expected_output": "YES", "is_sample": true},
+        {"input_data": "hello\n", "expected_output": "NO", "is_sample": true},
+        {"input_data": "Madam\n", "expected_output": "YES", "is_sample": false},
+        {"input_data": "A1b2B1a\n", "expected_output": "YES", "is_sample": false},
+        {"input_data": "IISERB\n", "expected_output": "NO", "is_sample": false},
+        {"input_data": "x\n", "expected_output": "YES", "is_sample": false},
+        {"input_data": "Abba\n", "expected_output": "YES", "is_sample": false}
+      ]
+    },
+    {
+      "question_id": "Q3",
+      "title": "Matrix Transpose",
+      "problem_statement": "Given an R x C matrix of integers, compute and print its transpose (a C x R matrix).\n\n### Input Format\nFirst line: Two space-separated integers `R` and `C` (1 <= R, C <= 50).\nFollowing R lines: `C` space-separated integers per line.\n\n### Output Format\nPrint `C` lines, each containing `R` space-separated integers, followed by a newline.",
+      "topic_tags": ["matrices", "2d-arrays", "loops"],
+      "expected_complexity": "O(R * C)",
+      "forbidden_constructs": [],
+      "test_cases": [
+        {"input_data": "2 3\n1 2 3\n4 5 6\n", "expected_output": "1 4\n2 5\n3 6", "is_sample": true},
+        {"input_data": "1 2\n7 8\n", "expected_output": "7\n8", "is_sample": true},
+        {"input_data": "3 3\n1 0 0\n0 1 0\n0 0 1\n", "expected_output": "1 0 0\n0 1 0\n0 0 1", "is_sample": false},
+        {"input_data": "3 2\n10 20\n30 40\n50 60\n", "expected_output": "10 30 50\n20 40 60", "is_sample": false},
+        {"input_data": "1 1\n42\n", "expected_output": "42", "is_sample": false},
+        {"input_data": "2 4\n1 2 3 4\n5 6 7 8\n", "expected_output": "1 5\n2 6\n3 7\n4 8", "is_sample": false}
+      ]
+    }
+  ]
+}

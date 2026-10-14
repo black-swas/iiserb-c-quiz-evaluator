@@ -1,0 +1,5 @@
+# Shell scripts and the Dockerfile must keep LF endings, or the container fails with "no such file or directory".
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
