@@ -18,6 +18,7 @@ import signal
 import subprocess
 import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, List, Optional, Tuple
 
 try:
@@ -250,10 +251,19 @@ def run_gcc_verification(
         timed_out_any = runtime_err_any = False
         details = []
 
-        for idx, tc in enumerate(test_cases, start=1):
-            out, _err, rc, timed_out, truncated = execute_binary_capped(
-                bin_path, tc.input_data, timeout_sec, tmpdir, settings.max_output_bytes
-            )
+        def run_case(tc: TestCase) -> Tuple[str, str, int, bool, bool]:
+            return execute_binary_capped(bin_path, tc.input_data, timeout_sec, tmpdir, settings.max_output_bytes)
+
+        # Test cases are independent processes, so they run side by side: a program that hangs on every case costs
+        # one timeout per batch instead of one per case. Results are consumed in order, so verdicts are unchanged.
+        workers = max(1, min(settings.sandbox_test_workers, len(test_cases)))
+        if workers == 1:
+            outcomes = [run_case(tc) for tc in test_cases]
+        else:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                outcomes = list(pool.map(run_case, test_cases))
+
+        for idx, (tc, (out, _err, rc, timed_out, truncated)) in enumerate(zip(test_cases, outcomes), start=1):
             actual = normalize_output(out[:2048])
             expected = normalize_output(tc.expected_output)
             ok = (not timed_out) and (not truncated) and rc == 0 and actual == expected
