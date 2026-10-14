@@ -197,3 +197,61 @@ def test_zip_inside_zip_inside_zip_is_supported():
     outer = make_zip({"all/mid.zip": mid})
     result = extract_student_submissions([("everything.zip", outer)])
     assert students(result) == {"26416": ["Q1"]}
+
+
+# ------------------------------------------------------------------ identity written inside the file
+from app.analyzer.zip_ingestor import _header_identity
+
+
+@pytest.mark.parametrize("header,expected", [
+    ("// Name: Rishit Sharma\n// Roll No: 26416\n", ("26416", "Rishit Sharma")),
+    ("// Roll Number : 26416, Name: Rishit Sharma\n", ("26416", "Rishit Sharma")),
+    ("/*\n * Name   - Alice Smith\n * Roll no. 25104\n */\n", ("25104", "Alice Smith")),
+    ("/* Student ID: 25104 */\n", ("25104", None)),
+    ("// Enrollment No: B21CS045\n", ("B21CS045", None)),
+    ("// Name: Rishit Sharma Roll No: 26416\n", ("26416", "Rishit Sharma")),
+    ("// Alice Smith - 25104\n", ("25104", "Alice Smith")),
+    ("// 25104 Alice\n", ("25104", "Alice")),
+    ("// 25104\n", ("25104", None)),
+    ("#include <stdio.h>\n// Author: Bob\n", (None, "Bob")),
+    ("// Name:\n// Roll No:\n", (None, None)),                       # an unfilled template
+    ("// Name: Your Name\n// Roll No: XXXXX\n", (None, None)),
+    ("// Program name: Count bits\n// Test ID: 12\n", (None, None)),   # not a student identity
+    ("int main() { return 0; } // Roll: 99999\n", (None, None)),      # only leading comment lines count
+])
+def test_identity_inside_the_file(header, expected):
+    assert _header_identity(header + "int main() { return 0; }\n") == expected
+
+
+def test_roll_in_file_is_used_when_the_file_name_has_no_student():
+    z = make_zip({"que1.c": "// Roll No: 26416\n" + C, "que2.c": C, "que3.c": "// roll: 26416\n" + C})
+    result = extract_student_submissions([("class.zip", z)])
+    assert students(result) == {"26416": ["Q1", "Q2", "Q3"]}                # que2.c inherits from its siblings
+    assert not any("UNKNOWN" in w for w in result["warnings"])
+
+
+def test_name_in_file_is_used_when_there_is_no_roll():
+    z = make_zip({"que1.c": "// Name: Alice Smith\n" + C, "que2.c": "// Name: alice smith\n" + C})
+    assert students(extract_student_submissions([("class.zip", z)])) == {"Alice Smith": ["Q1", "Q2"]}
+
+
+def test_batch_zip_with_different_students_per_file_is_not_merged():
+    outer = make_zip({"alpha.zip": make_zip({"que1.c": "// Roll: 11111\n" + C}), "beta.zip": make_zip({"que1.c": "// Roll: 22222\n" + C})})
+    assert students(extract_student_submissions([("class.zip", outer)])) == {"11111": ["Q1"], "22222": ["Q1"]}
+    loose = [("que1.c", ("// Roll: 11111\n" + C).encode()), ("que1.c", ("// Roll: 22222\n" + C).encode()), ("que1.c", C.encode())]
+    result = extract_student_submissions(loose)
+    assert set(result["students"]) == {"11111", "22222", "UNKNOWN_STUDENT_1"}   # the anonymous one is not guessed
+
+
+def test_file_name_roll_beats_the_roll_in_the_file_and_conflict_is_reported():
+    result = extract_student_submissions([("26416_que1.c", ("// Roll: 27111\n" + C).encode())])
+    assert students(result) == {"26416": ["Q1"]}
+    assert any("27111" in w and "26416" in w for w in result["warnings"])
+
+
+def test_roll_in_file_beats_a_batch_zip_name_but_not_a_folder():
+    z = make_zip({"que1.c": "// Roll: 26416\n" + C})
+    result = extract_student_submissions([("CS101_lab.zip", z)])
+    assert students(result) == {"26416": ["Q1"]}
+    folder = make_zip({"25104/que1.c": "// Roll: 26416\n" + C})
+    assert students(extract_student_submissions([("x.zip", folder)])) == {"25104": ["Q1"]}
