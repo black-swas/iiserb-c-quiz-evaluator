@@ -14,6 +14,15 @@ The evaluator grades submissions into three primary tabs using a strict priority
 | **Creative** | 🔵 | `BLUE` | Innovative, valid solutions (bitwise tricks, $O(1)$ math, pure recursion, pointer arithmetic, golfed ternaries). Passes 100% tests; must **not** be penalized as cheating. |
 | **Needs Review** | 🔴 | `RED` | Cheating, adversarial attacks, syntax errors, timeouts, or broken edge-case logic requiring TA intervention. |
 
+### The 7 Evaluator Test Layers
+1. **Security violations:** Checks for restricted operations such as `system()`, `fork()`, `socket()`, `getenv()`, file-writing operations, inline assembly, and unsafe or forbidden `#include` paths. Programs that trigger these checks are not executed.
+2. **Attempts to manipulate the grader:** Examines comments and string literals for text directed at an automated grader (e.g., Student 13). Such instructions trigger a review even if the code compiles.
+3. **Empty or incomplete programs:** Detects empty implementations or skeleton `main()` functions that do not meaningfully implement the assigned solution.
+4. **Compilation and runtime failures:** Compiles the submission with GCC and checks for compilation errors, execution timeouts (e.g., Student 15), and failures during testing.
+5. **Assignment-specific restrictions:** Checks whether the program uses constructs explicitly prohibited by the question paper, through its `forbidden_constructs` configuration.
+6. **Functional correctness and hard-coded answers:** Runs the configured test cases. It distinguishes programs that pass, ordinary failing solutions (e.g., Student 14), programs that always print the same output (e.g., Student 11), and programs that only handle the sample inputs (e.g., Student 10). It also checks for suspicious decoy loops that never reach the output (e.g., Student 12).
+7. **Plagiarism indicators and unusual approaches:** Compares submissions for structural similarity, looking for distinctive shared code or near-exact copies across multiple questions (e.g., Student 8 & Student 9). It flags strong matches for review and identifies unusual techniques in otherwise correct solutions (e.g., Students 2–6).
+
 ---
 
 ## 2. 15-Persona Master Mapping Table (Question Paper 1)

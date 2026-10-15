@@ -19,7 +19,21 @@ This directory contains reference question papers, student submission datasets, 
 
 ---
 
-## 2. Quickstart: Running the Quiz 1 Benchmark
+## 2. The 7 Types of Tests Performed
+
+The evaluator systematically verifies all submissions through 7 verification layers:
+
+1. **Security violations:** Checks for restricted operations such as `system()`, `fork()`, `socket()`, `getenv()`, file-writing operations, inline assembly, and unsafe or forbidden `#include` paths. Programs that trigger these checks are not executed.
+2. **Attempts to manipulate the grader:** Examines comments and string literals for text directed at an automated grader. Such instructions can trigger a review even if the code compiles.
+3. **Empty or incomplete programs:** Detects empty implementations or skeleton `main()` functions that do not meaningfully implement the assigned solution.
+4. **Compilation and runtime failures:** Compiles the submission with GCC and checks for compilation errors, execution timeouts, and failures during testing.
+5. **Assignment-specific restrictions:** Checks whether the program uses constructs explicitly prohibited by the question paper, through its `forbidden_constructs` configuration.
+6. **Functional correctness and hard-coded answers:** Runs the configured test cases. It distinguishes programs that pass, ordinary failing solutions, programs that always print the same output, and programs that only handle the sample inputs. It also checks for suspicious decoy loops that never reach the output.
+7. **Plagiarism indicators and unusual approaches:** Compares submissions for structural similarity, looking for distinctive shared code or near-exact copies across multiple questions. It can flag strong matches for review and identify unusual techniques in otherwise correct solutions.
+
+---
+
+## 3. Quickstart: Running the Quiz 1 Benchmark
 
 You can evaluate the Quiz 1 benchmark dataset deterministically in seconds (requires Linux or WSL with GCC installed):
 
