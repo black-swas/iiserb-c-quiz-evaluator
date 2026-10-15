@@ -153,6 +153,7 @@ def test_full_evaluation_job(client):
     assert (by_roll["25003"]["tab_category"], by_roll["25003"]["cheat_type"]) == ("RED", "HARDCODED_PRINTF")
     assert report["summary_counts"]["GREEN"] == 1 and report["summary_counts"]["RED"] == 2
     assert report["student_matrix"]["25001"]["Q1"]["passed_tests"] == "3/3"
+    assert by_roll["25001"]["llm_red_review"]["status"] == "NONE"
 
 
 @needs_gcc
