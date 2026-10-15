@@ -52,7 +52,7 @@ Student code is wrapped in per-request random delimiters; failures are reported 
 
 ## Deploy on Render (from GitHub)
 
-1. Push this folder to a GitHub repository (the repo root must contain `Dockerfile` and `render.yaml`) or access the live deployment on [Render](https://iiserb-c-quiz-evaluator.onrender.com/).
+1. Push this folder to a GitHub repository (the repo root must contain `Dockerfile` and `render.yaml`) or access the live deployment on [Render](https://iiserb-c-quiz-evaluator-prsm.onrender.com).
 2. Render dashboard → **New → Blueprint** → select the repo. Render reads `render.yaml` and creates the web service
    (Docker, Singapore, Starter plan, 1 GB persistent disk at `/app/data`).
 3. When prompted, set **`ANTHROPIC_API_KEY`** (optional; without it the tool runs fully deterministically).
