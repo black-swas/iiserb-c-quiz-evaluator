@@ -11,6 +11,16 @@ In the evaluation workflow, a Question Paper serves three critical functions:
 2. **Cheat Detection Baseline:** Differentiates visible **Sample Test Cases** (`"is_sample": true`) from unseen **Hidden Test Cases** (`"is_sample": false`), enabling automated detection of hardcoded condition trees (Sample Input Spoofing).
 3. **AST Static Policy Enforcement:** Enforces pedagogical constraints by listing `forbidden_constructs` (e.g., forbidding `goto`, `qsort`, or library shortcuts).
 
+### The 7 Types of Tests Performed
+Every submitted C program is subjected to seven layers of evaluation:
+1. **Security violations:** Checks for restricted operations such as `system()`, `fork()`, `socket()`, `getenv()`, file-writing operations, inline assembly, and unsafe or forbidden `#include` paths. Programs that trigger these checks are not executed.
+2. **Attempts to manipulate the grader:** Examines comments and string literals for text directed at an automated grader. Such instructions can trigger a review even if the code compiles.
+3. **Empty or incomplete programs:** Detects empty implementations or skeleton `main()` functions that do not meaningfully implement the assigned solution.
+4. **Compilation and runtime failures:** Compiles the submission with GCC and checks for compilation errors, execution timeouts, and failures during testing.
+5. **Assignment-specific restrictions:** Checks whether the program uses constructs explicitly prohibited by the question paper, through its `forbidden_constructs` configuration.
+6. **Functional correctness and hard-coded answers:** Runs the configured test cases. It distinguishes programs that pass, ordinary failing solutions, programs that always print the same output, and programs that only handle the sample inputs. It also checks for suspicious decoy loops that never reach the output.
+7. **Plagiarism indicators and unusual approaches:** Compares submissions for structural similarity, looking for distinctive shared code or near-exact copies across multiple questions. It can flag strong matches for review and identify unusual techniques in otherwise correct solutions.
+
 ---
 
 ## 2. JSON Schema Specification

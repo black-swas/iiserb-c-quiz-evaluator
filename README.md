@@ -14,16 +14,29 @@ optional LLM judge *approach* (standard vs creative). A TA then reviews a short,
 
 ## How a verdict is decided
 
-Hard facts always outrank heuristics, and the LLM can never overturn them.
+Hard facts always outrank heuristics, and the LLM can never overturn them. The evaluator systematically performs **7 types of tests** across every submission:
 
-1. Security violations (shell, network, file, environment, bad `#include`) → never executed
-2. Text addressed to an automated grader in comments or strings
-3. Empty / skeleton `main()`
-4. Compile error, then timeout
-5. A construct the question forbids (`forbidden_constructs`)
-6. No tests → **Unverified**
-7. All tests pass → strong clone → red; distinctive technique → blue; otherwise green
-8. Some tests fail → classified by *behaviour*: same output for every input = hard-coded; sample answers only = special-casing; loops that never reach the output = decoy code; otherwise a plain failing program
+1. **Security violations**  
+   Checks for restricted operations such as `system()`, `fork()`, `socket()`, `getenv()`, file-writing operations, inline assembly, and unsafe or forbidden `#include` paths. Programs that trigger these checks are not executed.
+
+2. **Attempts to manipulate the grader**  
+   Examines comments and string literals for text directed at an automated grader. Such instructions can trigger a review even if the code compiles.
+
+3. **Empty or incomplete programs**  
+   Detects empty implementations or skeleton `main()` functions that do not meaningfully implement the assigned solution.
+
+4. **Compilation and runtime failures**  
+   Compiles the submission with GCC and checks for compilation errors, execution timeouts, and failures during testing.
+
+5. **Assignment-specific restrictions**  
+   Checks whether the program uses constructs explicitly prohibited by the question paper, through its `forbidden_constructs` configuration.
+
+6. **Functional correctness and hard-coded answers**  
+   Runs the configured test cases. It distinguishes programs that pass, ordinary failing solutions, programs that always print the same output, and programs that only handle the sample inputs. It also checks for suspicious decoy loops that never reach the output.
+
+7. **Plagiarism indicators and unusual approaches**  
+   Compares submissions for structural similarity, looking for distinctive shared code or near-exact copies across multiple questions. It can flag strong matches for review and identify unusual techniques in otherwise correct solutions.
+
 
 **Plagiarism.** Programs are canonicalised (identifiers, literals, `for`/`while`, comments, whitespace ignored) and compared.
 Two students who both write the textbook loop produce identical token streams, so similarity alone is weak evidence.
