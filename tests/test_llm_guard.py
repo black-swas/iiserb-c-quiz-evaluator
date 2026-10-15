@@ -34,6 +34,7 @@ def test_creative_moves_green_to_blue_and_adds_notes():
     assert ev.tab_category == "BLUE" and ev.uncommon_approach_tag == "Bit trick"
     assert ev.llm_summary == "Does a thing." and ev.llm_model == "claude-test" and ev.evaluation_source == "DETERMINISTIC+LLM"
     assert 3 in ev.flagged_lines and 99 not in ev.flagged_lines      # out-of-range / non-integer hints are dropped
+    assert ev.llm_red_review.status == "NONE"
 
 
 def test_standard_moves_blue_to_green():
@@ -46,13 +47,21 @@ def test_standard_moves_blue_to_green():
 def test_red_verdicts_cannot_be_changed(cheat):
     ev = make_eval(tab="RED", cheat=cheat)
     for approach in ("CREATIVE", "STANDARD"):
-        assert llm.apply_llm_verdicts({"a": ev}, [review(approach=approach)], "m") == 0
-    assert ev.tab_category == "RED" and ev.cheat_type == cheat and ev.llm_summary is None
+        assert llm.apply_llm_verdicts({"a": ev}, [review(approach=approach, red_review_recommendation={"status": "RED_REVIEW", "reason": "x"})], "m") == 0
+    assert ev.tab_category == "RED" and ev.cheat_type == cheat and ev.llm_summary is None and ev.llm_red_review.status == "NONE"
 
 
 def test_gray_cannot_be_changed():
     ev = make_eval(tab="GRAY")
-    assert llm.apply_llm_verdicts({"a": ev}, [review()], "m") == 0 and ev.tab_category == "GRAY"
+    assert llm.apply_llm_verdicts({"a": ev}, [review(red_review_recommendation={"status": "RED_REVIEW", "reason": "x"})], "m") == 0
+    assert ev.tab_category == "GRAY" and ev.llm_red_review.status == "NONE"
+
+
+def test_missing_red_review_field_in_old_payload_gets_default():
+    payload = make_eval().model_dump()
+    payload.pop("llm_red_review", None)
+    parsed = SubmissionEvaluation(**payload)
+    assert parsed.llm_red_review.status == "NONE" and parsed.llm_red_review.evidence_lines == []
 
 
 def test_unknown_students_and_garbage_entries_are_ignored():
@@ -66,6 +75,34 @@ def test_integrity_concern_is_a_note_not_a_verdict():
     llm.apply_llm_verdicts({"a": ev}, [review(approach="STANDARD", integrity_concern="Looks tailored to sample inputs")], "m")
     assert ev.tab_category == "GREEN"
     assert any("advisory" in n and "tailored" in n for n in ev.integrity_notes)
+
+
+def test_red_review_recommendation_is_advisory_only():
+    ev = make_eval()
+    llm.apply_llm_verdicts({"a": ev}, [review(red_review_recommendation={
+        "status": "RED_REVIEW",
+        "reason": "Possible sample-special-casing pattern despite passing tests.",
+        "confidence": 82,
+        "evidence_lines": [4, 5],
+    })], "m")
+    assert ev.tab_category == "BLUE"
+    assert ev.llm_red_review.status == "RED_REVIEW"
+    assert ev.llm_red_review.reason and "sample-special-casing" in ev.llm_red_review.reason
+    assert ev.llm_red_review.confidence == 82
+    assert ev.llm_red_review.evidence_lines == [4, 5]
+
+
+def test_red_review_evidence_lines_are_range_checked():
+    ev = make_eval()
+    llm.apply_llm_verdicts({"a": ev}, [review(red_review_recommendation={
+        "status": "RED_REVIEW",
+        "reason": "Suspicious branch path.",
+        "confidence": 120,
+        "evidence_lines": [0, 2, 99, "x", True, 2.8],
+    })], "m")
+    assert ev.llm_red_review.confidence == 100
+    assert ev.llm_red_review.evidence_lines == [2]
+    assert ev.tab_category == "BLUE"
 
 
 # ------------------------------------------------------------------ parsing and prompt safety
@@ -91,7 +128,7 @@ def test_delimiter_in_student_code_cannot_break_out():
 
 def test_system_prompt_tells_the_model_not_to_regrade():
     prompt = llm.build_system_prompt(QUESTION, "No TA corrections recorded yet.", "n0nce")
-    assert "do NOT re-grade" in prompt and "n0nce" in prompt
+    assert "do NOT re-grade" in prompt and "Never output RED" in prompt and "n0nce" in prompt
 
 
 # ------------------------------------------------------------------ transport (mocked HTTP, no network)

@@ -100,6 +100,13 @@ class CloneMatch(BaseModel):
     matched_lines_partner: List[int] = Field(default_factory=list)
 
 
+class LLMRedReviewRecommendation(BaseModel):
+    status: Literal["NONE", "RED_REVIEW"] = "NONE"
+    reason: Optional[str] = None
+    confidence: Optional[int] = Field(default=None, ge=0, le=100)
+    evidence_lines: List[int] = Field(default_factory=list)
+
+
 class SubmissionEvaluation(BaseModel):
     roll_no: str
     question_id: str
@@ -124,6 +131,7 @@ class SubmissionEvaluation(BaseModel):
     llm_summary: Optional[str] = None
     llm_callout: Optional[str] = None
     llm_model: Optional[str] = None
+    llm_red_review: LLMRedReviewRecommendation = Field(default_factory=LLMRedReviewRecommendation)
     ta_feedback: Optional[Literal["AGREE", "DISAGREE"]] = None
     ta_override_category: Optional[Literal["GREEN", "BLUE", "RED"]] = None
     ta_note: Optional[str] = None
