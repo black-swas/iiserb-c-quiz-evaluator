@@ -67,6 +67,8 @@ def main() -> int:
     if not zips:
         zips = sorted((zip_dir / f"que{args.paper}_solutions").glob(f"student*_que_paper{args.paper}.zip"))
     if not zips:
+        zips = sorted((zip_dir / f"quiz{args.paper}_solutions").glob(f"student*_que_paper{args.paper}.zip"))
+    if not zips:
         zips = sorted(zip_dir.rglob(f"student*_que_paper{args.paper}.zip"))
     uploads = [(p.name, p.read_bytes()) for p in zips]
     if not uploads:
