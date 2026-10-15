@@ -52,7 +52,7 @@ Notes
 
 ## Using it
 
-1. **Question paper**: a JSON file (see `sample_quiz_data/`). Mark the tests printed on the paper with `"is_sample": true`; the rest are hidden tests.
+1. **Question paper**: a JSON file (see [`sample_quiz_data/`](sample_quiz_data/) and the [Question Paper Format Guide](sample_quiz_data/QUESTION_PAPER_FORMAT.md)). Mark the tests printed on the paper with `"is_sample": true`; the rest are hidden tests.
 2. **Submissions**: one ZIP per student (`26416.zip` containing `que1.c`…), a master ZIP with a folder per student, or loose files like `26416_que1.c`. Suffixes such as `_que_paper1` are removed from student ids.
 3. **Evaluate**. A progress bar follows the server-side job. Results: *Triage* (list + code, tests, evidence), *Class matrix*, *Integrity* (collusion pairs, side-by-side compare), *TA memory*.
 4. **Export** a detailed CSV or the matrix CSV, **save the session** as JSON to reopen later, or tick *Hide student ids* for blind marking.
@@ -106,13 +106,36 @@ uvicorn app.main:app --reload                         # http://localhost:8000
 The sandbox is POSIX-only; on Windows run it in WSL or Docker (`docker build -t qe . && docker run -p 8000:8000 qe`).
 GitHub Actions (`.github/workflows/ci.yml`) runs the tests and builds the image on every push.
 
+## Benchmark Dataset & Sample Question Papers
+
+A complete benchmark test suite modeling **15 distinct student personas** answering **Question Paper 1** (45 C source submissions) is included under [`sample_quiz_data/`](sample_quiz_data/):
+
+* **Question Paper 1**: Available in machine-readable JSON ([`quiz1_paper.json`](sample_quiz_data/quiz1_paper.json)) and formatted exam Markdown ([`quiz1_paper.md`](sample_quiz_data/quiz1_paper.md)).
+* **Student Sample Solutions**: 15 student ZIP archives + extracted `.c` sources in [`sample_quiz_data/quiz1_solutions/`](sample_quiz_data/quiz1_solutions/).
+* **Question Paper Format Guide**: Full JSON schema and authoring specifications in [`sample_quiz_data/QUESTION_PAPER_FORMAT.md`](sample_quiz_data/QUESTION_PAPER_FORMAT.md).
+* **Generation & Persona Mapping**: In-depth ground truth behavior and triage matrix in [`sample_quiz_data/GENERATION_MAPPING.md`](sample_quiz_data/GENERATION_MAPPING.md).
+* **Dataset Generation Prompt**: Ready-to-copy Master Prompt for generating new question papers and solution datasets with frontier LLMs in [`sample_quiz_data/DATASET_GENERATION_PROMPT.md`](sample_quiz_data/DATASET_GENERATION_PROMPT.md).
+
+Run the benchmark evaluation with:
+```bash
+python scripts/evaluate_dataset.py --zips sample_quiz_data/quiz1_solutions --paper 1 --no-llm
+```
+
 ```
 app/
   main.py              API, auth, jobs, static UI
   analyzer/            ingestion, static analysis, sandbox, plagiarism, triage, LLM, pipeline
   database/            TA calibration memory (SQLite)
   static/              index.html, styles.css, app.js (no build step, no CDNs)
-sample_quiz_data/      three example question papers
+sample_quiz_data/      question papers, format guides, persona mapping, and benchmark student solutions
+  quiz1_solutions/     15 student solution archives and extracted C source files
+  quiz1_paper.json     Question paper 1 (JSON)
+  quiz1_paper.md       Question paper 1 (Markdown)
+  quiz2_paper.json     Question paper 2 (JSON)
+  quiz3_paper.json     Question paper 3 (JSON)
+  QUESTION_PAPER_FORMAT.md      Specification for creating question papers
+  GENERATION_MAPPING.md         15-persona behavior & triage mapping
+  DATASET_GENERATION_PROMPT.md  Master prompt to generate new quiz papers & solutions
 scripts/               dataset accuracy benchmarking (`evaluate_dataset.py`)
 tests/                 regression tests (one per defect found in earlier versions)
 ```
