@@ -312,6 +312,16 @@
   const effectiveTab = (ev) => (state.ta[taKey(ev)] ? state.ta[taKey(ev)].category : ev.tab_category);
   const displayName = (roll) => (state.ui.anonymize ? state.alias[roll] || roll : roll);
   const testsLabel = (ev) => (ev.gcc_result && ev.gcc_result.total_count ? `${ev.gcc_result.passed_count}/${ev.gcc_result.total_count} tests` : 'no tests');
+  const llmRedReview = (ev) => {
+    const rec = ev && ev.llm_red_review;
+    if (!rec || rec.status !== 'RED_REVIEW') return { status: 'NONE', reason: '', confidence: null, evidence_lines: [] };
+    return {
+      status: 'RED_REVIEW',
+      reason: typeof rec.reason === 'string' ? rec.reason : '',
+      confidence: Number.isFinite(rec.confidence) ? rec.confidence : null,
+      evidence_lines: Array.isArray(rec.evidence_lines) ? rec.evidence_lines.filter((n) => Number.isInteger(n) && n > 0) : [],
+    };
+  };
 
   function openReport(report, ta) {
     state.report = report;
@@ -526,8 +536,10 @@
     if (!ev) { box.replaceChildren(h('div', { class: 'empty', text: 'Select a submission to inspect its code, tests and evidence.' })); return; }
     const q = questions().find((x) => x.question_id === ev.question_id);
     const tab = effectiveTab(ev);
+    const rec = llmRedReview(ev);
     const g = ev.gcc_result;
     const cheat = CHEAT_LABEL[ev.cheat_type];
+    const recLines = rec.evidence_lines.length ? rec.evidence_lines.join(', ') : 'none provided';
 
     const head = h('div', { class: 'insp-head' },
       h('div', { class: 'insp-title' }, h('h3', { text: displayName(ev.roll_no) }), badge(tab),
@@ -541,13 +553,30 @@
 
     const sections = [head];
 
+    if (rec.status === 'RED_REVIEW') {
+      sections.push(h('div', { class: 'insp-section' },
+        h('div', { class: 'alert alert-warn' },
+          h('strong', { text: 'AI advisory: recommend manual RED review' }),
+          h('div', { text: rec.reason || 'Potential integrity concern flagged by the AI.' }),
+          h('div', { class: 'muted small', text: `Confidence: ${rec.confidence === null ? 'n/a' : `${rec.confidence}/100`} · Evidence lines: ${recLines}` }),
+          h('ul', { class: 'notes-list' }, [
+            h('li', { text: 'Inspect the highlighted/evidence code lines and compare the implementation against expected logic.' }),
+            h('li', { text: 'Open Similar submissions when available to compare structure and context.' }),
+            h('li', { text: 'Use TA decision: Agree, or Override → Needs review (RED), add a reason, then Save override.' }),
+            h('li', { text: 'This recommendation is advisory only and never changes the verdict automatically.' }),
+          ]))));
+    }
+
     if (ev.integrity_notes && ev.integrity_notes.length) {
       sections.push(h('div', { class: 'insp-section' }, h('h4', { text: 'Integrity notes' }),
         h('ul', { class: 'notes-list' }, ev.integrity_notes.map((n) => h('li', { text: n })))));
     }
 
+    const codeHints = rec.status === 'RED_REVIEW'
+      ? Array.from(new Set([...(ev.flagged_lines || []), ...rec.evidence_lines])).sort((a, b) => a - b)
+      : ev.flagged_lines;
     sections.push(h('div', { class: 'insp-section' }, h('h4', { text: 'Code' }),
-      renderCode(ev.raw_code, ev.flagged_lines, ev.line_annotations, ev.tab_category)));
+      renderCode(ev.raw_code, codeHints, ev.line_annotations, rec.status === 'RED_REVIEW' ? 'RED' : ev.tab_category)));
 
     if (g) sections.push(renderTestsSection(g));
 
@@ -761,13 +790,17 @@
   // ------------------------------------------------------------------ exports and sessions
   function exportDetailedCsv() {
     const rows = [['student', 'question', 'tab', 'verdict', 'cheat_type', 'tests_passed', 'tests_total', 'max_similarity_percent',
-      'strong_match_partners', 'integrity_notes', 'ai_summary', 'ta_decision', 'ta_category', 'ta_note']];
+      'strong_match_partners', 'integrity_notes', 'ai_summary', 'ai_red_review', 'ai_red_review_confidence', 'ai_red_review_lines',
+      'ta_decision', 'ta_category', 'ta_note']];
     for (const q of questions()) for (const ev of evalsFor(q.question_id).slice().sort((a, b) => natural(a.roll_no, b.roll_no))) {
       const ta = state.ta[taKey(ev)] || {};
+      const rec = llmRedReview(ev);
       const g = ev.gcc_result;
       rows.push([displayName(ev.roll_no), q.question_id, ev.tab_category, ev.verdict_badge, ev.cheat_type, g ? g.passed_count : '', g ? g.total_count : '',
         ev.max_clone_similarity, (ev.clone_matches || []).filter((m) => m.strength === 'STRONG').map((m) => displayName(m.partner_roll_no)).join(' '),
-        (ev.integrity_notes || []).join(' | '), ev.llm_summary || '', ta.decision || '', ta.category || '', ta.note || '']);
+        (ev.integrity_notes || []).join(' | '), ev.llm_summary || '', rec.status === 'RED_REVIEW' ? rec.reason : '',
+        rec.status === 'RED_REVIEW' && rec.confidence !== null ? rec.confidence : '', rec.status === 'RED_REVIEW' ? rec.evidence_lines.join(' ') : '',
+        ta.decision || '', ta.category || '', ta.note || '']);
     }
     download(`${slug(state.report.quiz_title)}_results.csv`, toCsv(rows), 'text/csv');
   }

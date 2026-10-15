@@ -45,8 +45,10 @@ comments) or the same pair is a near-exact copy in several questions. Matches in
 shown as weak context and never create a verdict. Matches are evidence for a human, not proof.
 
 **LLM (optional).** Claude Haiku (default `claude-haiku-5-5`) receives code that already passes all tests and no integrity flag.
-It may only move green ↔ blue, add a one-line summary, line hints and an advisory "concern" note. It cannot touch a red or gray
-verdict. Student code is wrapped in per-request random delimiters; failures are reported in the UI, never swallowed.
+It may only move green ↔ blue, add a one-line summary, line hints and advisory notes. It can also emit an advisory
+`RED_REVIEW` recommendation with reason, confidence and evidence lines for TA follow-up. This recommendation never changes
+the verdict automatically: red/gray protections remain deterministic, and only a TA override can move a submission to red.
+Student code is wrapped in per-request random delimiters; failures are reported in the UI, never swallowed.
 
 ## Deploy on Render (from GitHub)
 
@@ -68,6 +70,8 @@ Notes
 1. **Question paper**: a JSON file (see [`sample_quiz_data/`](sample_quiz_data/) and the [Question Paper Format Guide](sample_quiz_data/QUESTION_PAPER_FORMAT.md)). Mark the tests printed on the paper with `"is_sample": true`; the rest are hidden tests.
 2. **Submissions**: one ZIP per student (`26416.zip` containing `que1.c`…), a master ZIP with a folder per student, or loose files like `26416_que1.c`. Suffixes such as `_que_paper1` are removed from student ids.
 3. **Evaluate**. A progress bar follows the server-side job. Results: *Triage* (list + code, tests, evidence), *Class matrix*, *Integrity* (collusion pairs, side-by-side compare), *TA memory*.
+   If the AI posts an advisory `RED_REVIEW` recommendation, the inspector shows next-step actions:
+   inspect evidence lines, compare similar submissions, then use **TA decision** to agree/disagree or manually move to red with a reason.
 4. **Export** a detailed CSV or the matrix CSV, **save the session** as JSON to reopen later, or tick *Hide student ids* for blind marking.
 
 Evidence strength numbers (e.g. 95/100) describe how much hard evidence supports a verdict. They are **not** probabilities.
