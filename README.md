@@ -44,10 +44,10 @@ A match is **strong** only when the shared structure is distinctive in the class
 comments) or the same pair is a near-exact copy in several questions. Matches inside a large group of identical solutions are
 shown as weak context and never create a verdict. Matches are evidence for a human, not proof.
 
-**LLM (optional).** Claude Haiku (default `claude-haiku-5-5`) receives code that already passes all tests and no integrity flag.
-It may only move green ↔ blue, add a one-line summary, line hints and advisory notes. It can also emit an advisory
-`RED_REVIEW` recommendation with reason, confidence and evidence lines for TA follow-up. This recommendation never changes
-the verdict automatically: red/gray protections remain deterministic, and only a TA override can move a submission to red.
+**LLM (optional).** Claude Haiku (default `claude-haiku-5-5`) reviews submissions with no deterministic integrity flag.
+It may move green ↔ blue for verified passes, and it may triage unverified gray submissions into green or red for TA follow-up.
+It also adds a one-line summary, line hints and advisory notes, and can emit an advisory `RED_REVIEW` recommendation with reason,
+confidence and evidence lines. Deterministic red protections remain in place, and student code cannot override grading rules.
 Student code is wrapped in per-request random delimiters; failures are reported in the UI, never swallowed.
 
 ## Deploy on Render (from GitHub)

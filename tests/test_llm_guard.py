@@ -1,4 +1,4 @@
-"""The LLM is advisory: it may only move GREEN <-> BLUE, never change a RED/GRAY verdict or a test result."""
+"""The LLM is advisory: it may move GREEN <-> BLUE and triage GRAY to GREEN/RED, never change deterministic RED or test results."""
 import asyncio
 
 import httpx
@@ -51,10 +51,13 @@ def test_red_verdicts_cannot_be_changed(cheat):
     assert ev.tab_category == "RED" and ev.cheat_type == cheat and ev.llm_summary is None and ev.llm_red_review.status == "NONE"
 
 
-def test_gray_cannot_be_changed():
+def test_gray_can_be_triaged_to_green_or_red():
     ev = make_eval(tab="GRAY")
-    assert llm.apply_llm_verdicts({"a": ev}, [review(red_review_recommendation={"status": "RED_REVIEW", "reason": "x"})], "m") == 0
-    assert ev.tab_category == "GRAY" and ev.llm_red_review.status == "NONE"
+    assert llm.apply_llm_verdicts({"a": ev}, [review(unverified_verdict="GREEN")], "m") == 1
+    assert ev.tab_category == "GREEN"
+    ev2 = make_eval(tab="GRAY")
+    assert llm.apply_llm_verdicts({"a": ev2}, [review(unverified_verdict="RED")], "m") == 1
+    assert ev2.tab_category == "RED"
 
 
 def test_missing_red_review_field_in_old_payload_gets_default():
@@ -128,7 +131,7 @@ def test_delimiter_in_student_code_cannot_break_out():
 
 def test_system_prompt_tells_the_model_not_to_regrade():
     prompt = llm.build_system_prompt(QUESTION, "No TA corrections recorded yet.", "n0nce")
-    assert "do NOT re-grade" in prompt and "Never output RED" in prompt and "n0nce" in prompt
+    assert "do NOT re-grade" in prompt and "deterministic RED verdicts" in prompt and "n0nce" in prompt
 
 
 # ------------------------------------------------------------------ transport (mocked HTTP, no network)
@@ -169,7 +172,7 @@ def test_credit_error_is_reported_and_leaves_verdicts_untouched(monkeypatch, llm
     assert report["fatal"] is True and report["failed_calls"] == 1 and "credit" in report["errors"][0].lower()
 
 
-def test_only_green_and_blue_submissions_are_sent(monkeypatch, llm_on):
+def test_gray_is_sent_but_red_is_not(monkeypatch, llm_on):
     seen = []
 
     def handler(request):
@@ -179,7 +182,7 @@ def test_only_green_and_blue_submissions_are_sent(monkeypatch, llm_on):
     patch_transport(monkeypatch, handler)
     evs = [make_eval("g"), make_eval("r", tab="RED", cheat="BROKEN_LOGIC"), make_eval("y", tab="GRAY")]
     asyncio.run(llm.annotate_question(QUESTION, evs, llm.new_llm_report()))
-    assert seen and 'roll_no=\\"g\\"' in seen[0] and 'roll_no=\\"r\\"' not in seen[0] and 'roll_no=\\"y\\"' not in seen[0]
+    assert seen and 'roll_no=\\"g\\"' in seen[0] and 'roll_no=\\"r\\"' not in seen[0] and 'roll_no=\\"y\\"' in seen[0]
 
 
 def test_nothing_is_sent_when_the_llm_is_unavailable(monkeypatch):
